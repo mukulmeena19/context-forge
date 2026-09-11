@@ -86,7 +86,7 @@ def _reason(document: dict, lexical: float, semantic: float, graph: float, query
     return reasons or ["weak supporting match"]
 
 
-def retrieve_context(query: str, index: dict, mode: str = "hybrid", limit: int = 20, budget: int = 8000) -> dict:
+def retrieve_context(query: str, index: dict, mode: str = "hybrid", limit: int = 20, budget: int = 8000, evidence_types: tuple[str, ...] | None = None) -> dict:
     started = time.perf_counter()
     documents = index.get("documents", [])
     query_tokens = tokenize(query)
@@ -109,9 +109,17 @@ def retrieve_context(query: str, index: dict, mode: str = "hybrid", limit: int =
         graph_score = _graph_boost(document, documents, seed_paths) if mode == "hybrid" else 0.0
         if document["path"] in graph_neighbors:
             graph_score = max(graph_score, 0.12)
-        score = raw_scores[i] + (0.10 * graph_score if mode == "hybrid" else 0.0)
+        evidence_score = 0.0
+        if evidence_types:
+            if "tests" in evidence_types and ("test" in document["path"].lower() or "test" in document["kind"].lower()):
+                evidence_score += 0.06
+            if "history" in evidence_types and document["kind"] == "commit":
+                evidence_score += 0.06
+            if "docs" in evidence_types and document["language"] in {"md", "mdx", "rst", "text"}:
+                evidence_score += 0.04
+        score = raw_scores[i] + (0.10 * graph_score if mode == "hybrid" else 0.0) + evidence_score
         if score:
-            ranked.append({**document, "score": round(score, 5), "lexical_score": round(lexical[i], 5), "semantic_score": round(semantic[i], 5), "graph_score": round(graph_score, 5), "reasons": _reason(document, lexical[i], semantic[i], graph_score, query_token_set)})
+            ranked.append({**document, "score": round(score, 5), "lexical_score": round(lexical[i], 5), "semantic_score": round(semantic[i], 5), "graph_score": round(graph_score, 5), "evidence_score": round(evidence_score, 5), "reasons": _reason(document, lexical[i], semantic[i], graph_score, query_token_set)})
     ranked.sort(key=lambda item: item["score"], reverse=True)
     selected = []
     token_count = 0
@@ -126,4 +134,4 @@ def retrieve_context(query: str, index: dict, mode: str = "hybrid", limit: int =
         f"## {item['path']}:{item['start']}-{item['end']} ({item['symbol']})\n```{item['language']}\n{item['text']}\n```"
         for item in selected
     )
-    return {"query": query, "mode": mode, "results": selected, "context": context, "tokens": token_count, "latency_ms": round((time.perf_counter() - started) * 1000, 2)}
+    return {"query": query, "mode": mode, "evidence_types": list(evidence_types or ()), "results": selected, "context": context, "tokens": token_count, "latency_ms": round((time.perf_counter() - started) * 1000, 2)}

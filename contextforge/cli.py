@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from .evaluate import evaluate, evaluate_all
 from .indexer import build_index, load_index, save_index
+from .intent import classify_task
 from .retrieval import retrieve_context
 
 
@@ -41,7 +42,10 @@ def main() -> None:
         save_index(index, args.output)
         print(json.dumps({"files": len(index["files"]), "chunks": len(index["documents"]), "edges": len(index["edges"]), "history_documents": index["history_documents"], "output": str(Path(args.output).resolve())}, indent=2))
     elif args.command == "retrieve":
-        print(json.dumps(retrieve_context(args.query, load_index(args.index), mode=args.mode, budget=args.budget), indent=2))
+        intent = classify_task(args.query)
+        result = retrieve_context(args.query, load_index(args.index), mode=args.mode, budget=args.budget, evidence_types=intent.evidence_types)
+        result["intent"] = {"kind": intent.kind, "confidence": intent.confidence, "evidence_types": list(intent.evidence_types)}
+        print(json.dumps(result, indent=2))
     elif args.command == "evaluate":
         cases = json.loads(Path(args.benchmark).read_text(encoding="utf-8"))
         print(json.dumps(evaluate(load_index(args.index), cases, mode=args.mode, budget=args.budget), indent=2))

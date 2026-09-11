@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from .evaluate import evaluate, evaluate_all
 from .indexer import build_index, load_index, save_index
+from .intent import classify_task
 from .retrieval import retrieve_context
 
 
@@ -58,7 +59,10 @@ def retrieve(request: RetrieveRequest) -> dict:
         index = load_index(request.index)
     except (OSError, ValueError) as error:
         raise HTTPException(status_code=404, detail="Index file could not be loaded.") from error
-    return retrieve_context(request.query, index, mode=request.mode, limit=request.limit, budget=request.budget)
+    intent = classify_task(request.query)
+    result = retrieve_context(request.query, index, mode=request.mode, limit=request.limit, budget=request.budget, evidence_types=intent.evidence_types)
+    result["intent"] = {"kind": intent.kind, "confidence": intent.confidence, "evidence_types": list(intent.evidence_types)}
+    return result
 
 
 @app.post("/evaluate")

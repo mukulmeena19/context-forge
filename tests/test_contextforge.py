@@ -3,6 +3,7 @@ from pathlib import Path
 
 from contextforge.evaluate import evaluate
 from contextforge.indexer import build_index
+from contextforge.intent import classify_task
 from contextforge.retrieval import retrieve_context
 
 
@@ -30,3 +31,10 @@ def test_evaluation_reports_metrics():
     report = evaluate(index, cases)
     assert report["cases"] == 2
     assert set(("recall", "precision", "mrr", "ndcg", "tokens", "latency_ms")) <= set(report["metrics"])
+
+
+def test_task_intent_selects_test_and_history_evidence():
+    intent = classify_task("Fix the authentication regression and add a regression test")
+    assert intent.kind == "bug"
+    assert "tests" in intent.evidence_types
+    assert "history" in intent.evidence_types

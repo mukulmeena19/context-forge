@@ -67,6 +67,7 @@ purpose coding assistant.
 - [x] BM25, semantic, and hybrid modes
 - [x] Graph-aware reranking with result explanations
 - [x] Token-budgeted Markdown context package
+- [x] Task-aware evidence selection
 - [x] CLI and FastAPI interfaces
 - [ ] Tree-sitter multi-language extraction
 - [x] Git history ingestion
