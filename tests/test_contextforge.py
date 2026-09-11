@@ -4,6 +4,7 @@ from pathlib import Path
 from contextforge.evaluate import evaluate
 from contextforge.indexer import build_index
 from contextforge.intent import classify_task
+from contextforge.parser import extract_chunks
 from contextforge.retrieval import retrieve_context
 
 
@@ -38,3 +39,16 @@ def test_task_intent_selects_test_and_history_evidence():
     assert intent.kind == "bug"
     assert "tests" in intent.evidence_types
     assert "history" in intent.evidence_types
+
+
+def test_parser_returns_symbol_chunks_with_line_ranges():
+    chunks = extract_chunks(Path("service.py"), "def reset_password(user_id):\n    return user_id\n")
+    assert chunks[0]["symbol"] == "reset_password"
+    assert chunks[0]["start"] == 1
+    assert chunks[0]["end"] == 2
+
+
+def test_index_metadata_tracks_external_evidence_counts():
+    index = build_index(ROOT / "contextforge", include_history=False)
+    assert index["history_documents"] == 0
+    assert index["github_documents"] == 0

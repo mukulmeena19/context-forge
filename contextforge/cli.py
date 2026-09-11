@@ -18,6 +18,9 @@ def main() -> None:
     index_parser.add_argument("--output", default=".contextforge/index.json")
     index_parser.add_argument("--history", action="store_true", help="include recent Git commit summaries")
     index_parser.add_argument("--history-limit", type=int, default=100)
+    index_parser.add_argument("--github-repo", help="owner/repository for issue and pull-request evidence")
+    index_parser.add_argument("--github-token", help="optional GitHub API token")
+    index_parser.add_argument("--github-limit", type=int, default=50)
 
     retrieve_parser = subparsers.add_parser("retrieve", help="retrieve a context package")
     retrieve_parser.add_argument("index")
@@ -38,9 +41,9 @@ def main() -> None:
 
     args = parser.parse_args()
     if args.command == "index":
-        index = build_index(args.root, include_history=args.history, history_limit=args.history_limit)
+        index = build_index(args.root, include_history=args.history, history_limit=args.history_limit, github_repo=args.github_repo, github_token=args.github_token, github_limit=args.github_limit)
         save_index(index, args.output)
-        print(json.dumps({"files": len(index["files"]), "chunks": len(index["documents"]), "edges": len(index["edges"]), "history_documents": index["history_documents"], "output": str(Path(args.output).resolve())}, indent=2))
+        print(json.dumps({"files": len(index["files"]), "chunks": len(index["documents"]), "edges": len(index["edges"]), "history_documents": index["history_documents"], "github_documents": index["github_documents"], "output": str(Path(args.output).resolve())}, indent=2))
     elif args.command == "retrieve":
         intent = classify_task(args.query)
         result = retrieve_context(args.query, load_index(args.index), mode=args.mode, budget=args.budget, evidence_types=intent.evidence_types)

@@ -11,8 +11,25 @@ STOP_WORDS = {"a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "i
 DIMENSIONS = 1024
 
 
+def _normalize_token(token: str) -> str:
+    token = token.lower()
+    if len(token) > 6 and token.endswith("ing"):
+        return token[:-3]
+    if len(token) > 5 and token.endswith("ed"):
+        return token[:-2]
+    if len(token) > 5 and token.endswith("er"):
+        return token[:-2]
+    if len(token) > 6 and token.endswith("al"):
+        return token[:-2]
+    if len(token) > 5 and token.endswith("e"):
+        return token[:-1]
+    if len(token) > 4 and token.endswith("s"):
+        return token[:-1]
+    return token
+
+
 def tokenize(text: str) -> list[str]:
-    return [token.lower() for token in TOKEN_RE.findall(text) if token.lower() not in STOP_WORDS]
+    return [_normalize_token(token) for token in TOKEN_RE.findall(text) if token.lower() not in STOP_WORDS]
 
 
 def _vector(text: str) -> Counter[int]:
@@ -29,8 +46,13 @@ def _cosine(left: Counter[int], right: Counter[int]) -> float:
     return numerator / denominator if denominator else 0.0
 
 
+def _search_text(document: dict) -> str:
+    """Weight repository identifiers more heavily than repeated prose."""
+    return " ".join([document["path"], document["path"], document["path"], document["symbol"], document["symbol"], document["symbol"], document["text"]])
+
+
 def _bm25(query: list[str], documents: list[dict]) -> list[float]:
-    tokenized = [tokenize(doc["path"] + " " + doc["symbol"] + " " + doc["text"]) for doc in documents]
+    tokenized = [tokenize(_search_text(doc)) for doc in documents]
     df = Counter(token for terms in tokenized for token in set(terms))
     average_length = sum(map(len, tokenized)) / max(len(tokenized), 1)
     scores = []
@@ -92,7 +114,7 @@ def retrieve_context(query: str, index: dict, mode: str = "hybrid", limit: int =
     query_tokens = tokenize(query)
     lexical = _bm25(query_tokens, documents)
     semantic_query = _vector(query)
-    semantic = [_cosine(semantic_query, _vector(doc["path"] + " " + doc["symbol"] + " " + doc["text"])) for doc in documents]
+    semantic = [_cosine(semantic_query, _vector(_search_text(doc))) for doc in documents]
     maximum = max(semantic, default=0.0)
     semantic = [score / maximum if maximum else 0.0 for score in semantic]
     if mode == "bm25":
@@ -100,7 +122,9 @@ def retrieve_context(query: str, index: dict, mode: str = "hybrid", limit: int =
     elif mode == "semantic":
         raw_scores = semantic
     else:
-        raw_scores = [0.55 * left + 0.35 * right for left, right in zip(lexical, semantic)]
+        # A max-dominant fusion prevents a strong lexical or semantic hit from
+        # being diluted by a weak score from the other retriever.
+        raw_scores = [max(left, right) + 0.20 * min(left, right) for left, right in zip(lexical, semantic)]
     query_token_set = set(query_tokens)
     seed_paths = {documents[i]["path"] for i, score in enumerate(raw_scores) if score >= 0.65 * max(raw_scores, default=1.0)}
     graph_neighbors = _graph_neighbors(index, seed_paths)
@@ -123,13 +147,17 @@ def retrieve_context(query: str, index: dict, mode: str = "hybrid", limit: int =
     ranked.sort(key=lambda item: item["score"], reverse=True)
     selected = []
     token_count = 0
+    path_counts = Counter()
     for item in ranked[:limit]:
+        if path_counts[item["path"]] >= 2:
+            continue
         item_tokens = len(tokenize(item["text"]))
         if selected and token_count + item_tokens > budget:
             continue
         item["token_count"] = item_tokens
         selected.append(item)
         token_count += item_tokens
+        path_counts[item["path"]] += 1
     context = "\n\n".join(
         f"## {item['path']}:{item['start']}-{item['end']} ({item['symbol']})\n```{item['language']}\n{item['text']}\n```"
         for item in selected
