@@ -1,0 +1,10 @@
+[
+  {
+    "query": "How is repository indexing and retrieval implemented?",
+    "relevant": ["contextforge/indexer.py", "contextforge/retrieval.py"]
+  },
+  {
+    "query": "How are Recall, MRR, and nDCG calculated for a benchmark?",
+    "relevant": ["contextforge/evaluate.py"]
+  }
+]
