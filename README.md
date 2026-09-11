@@ -24,6 +24,7 @@ From this directory:
 python -m contextforge.cli index . --history --output .contextforge\index.json
 python -m contextforge.cli retrieve .contextforge\index.json "Fix duplicate notifications after profile update" --mode hybrid --budget 1800
 python -m contextforge.cli compare .contextforge\index.json benchmarks\demo.json
+python -m contextforge.cli replay .contextforge\index.json benchmarks\demo.json
 ```
 
 To include public issue and pull-request evidence, add `--github-repo owner/repo`.
@@ -59,8 +60,9 @@ context package. It never edits files or executes repository code.
 ]
 ```
 
-The `relevant` paths are the ground truth used only by the evaluation lab. They
-are never shown to the retriever during ranking.
+The `relevant` paths are the ground truth used only by the evaluation lab. The
+indexer excludes `benchmarks/` by default so labels are never shown to the
+retriever during ranking.
 
 ## Research direction
 
@@ -88,6 +90,7 @@ purpose coding assistant.
 - [x] Code-aware weighting for paths and symbols
 - [x] Max-dominant hybrid fusion to preserve strong retrieval signals
 - [x] Read-only MCP agent integration
+- [x] Labelled task replay with context-coverage proxy
 - [x] CLI and FastAPI interfaces
 - [x] Tree-sitter multi-language extraction with safe fallbacks
 - [x] Git history ingestion
@@ -99,5 +102,6 @@ purpose coding assistant.
 ### Verification
 
 The current test suite passes with Python 3.14 and Tree-sitter language packages.
-The demo repository comparison is intentionally a small smoke benchmark; real
-claims require a larger issue-labelled corpus and downstream agent runs.
+The replay command reports a conservative `context_ready` proxy; real claims
+about coding-agent success require a larger issue-labelled corpus and recorded
+downstream agent runs.

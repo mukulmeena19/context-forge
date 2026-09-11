@@ -11,6 +11,7 @@ from .evaluate import evaluate, evaluate_all
 from .indexer import build_index, load_index, save_index
 from .intent import classify_task
 from .retrieval import retrieve_context
+from .replay import replay
 
 
 class IndexRequest(BaseModel):
@@ -35,6 +36,13 @@ class EvaluateRequest(BaseModel):
     index: str = ".contextforge/index.json"
     benchmark: str
     mode: Literal["bm25", "semantic", "hybrid", "all"] = "all"
+    budget: int = Field(default=8000, ge=100, le=100000)
+
+
+class ReplayRequest(BaseModel):
+    index: str = ".contextforge/index.json"
+    benchmark: str
+    mode: Literal["bm25", "semantic", "hybrid"] = "hybrid"
     budget: int = Field(default=8000, ge=100, le=100000)
 
 
@@ -78,3 +86,13 @@ def evaluate_benchmark(request: EvaluateRequest) -> dict:
     if request.mode == "all":
         return evaluate_all(index, cases, budget=request.budget)
     return evaluate(index, cases, mode=request.mode, budget=request.budget)
+
+
+@app.post("/replay")
+def replay_benchmark(request: ReplayRequest) -> dict:
+    try:
+        index = load_index(request.index)
+        cases = json.loads(Path(request.benchmark).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise HTTPException(status_code=404, detail="Index or benchmark file could not be loaded.") from error
+    return replay(index, cases, mode=request.mode, budget=request.budget)

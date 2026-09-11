@@ -8,7 +8,7 @@ from .history import git_history_documents
 from .github import github_documents
 from .parser import extract_chunks
 
-IGNORED_DIRS = {".git", ".venv", "venv", "node_modules", "dist", "build", "__pycache__", ".next", ".pytest_cache", ".contextforge"}
+IGNORED_DIRS = {".git", ".venv", "venv", "node_modules", "dist", "build", "__pycache__", ".next", ".pytest_cache", ".contextforge", "benchmarks"}
 SOURCE_EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".go", ".rs", ".rb", ".php", ".cs", ".cpp", ".c", ".h"}
 TEXT_EXTENSIONS = {".md", ".mdx", ".rst", ".txt", ".yaml", ".yml", ".json"}
 IMPORT_RE = re.compile(r"(?:from\s+([\w.]+)\s+import|import\s+([\w.]+)|require\(['\"]([^'\"]+))")

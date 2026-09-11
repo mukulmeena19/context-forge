@@ -6,6 +6,7 @@ from contextforge.indexer import build_index
 from contextforge.intent import classify_task
 from contextforge.parser import extract_chunks
 from contextforge.retrieval import retrieve_context
+from contextforge.replay import replay
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,3 +59,10 @@ def test_mcp_module_imports_without_optional_runtime():
     from contextforge.mcp_server import create_server
 
     assert callable(create_server)
+
+
+def test_replay_reports_context_coverage_proxy():
+    index = build_index(ROOT / "contextforge")
+    report = replay(index, [{"query": "How is retrieval implemented?", "relevant": ["retrieval.py"]}])
+    assert report["cases"] == 1
+    assert "context_ready_rate" in report["metrics"]

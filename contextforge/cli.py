@@ -7,6 +7,7 @@ from .evaluate import evaluate, evaluate_all
 from .indexer import build_index, load_index, save_index
 from .intent import classify_task
 from .retrieval import retrieve_context
+from .replay import replay
 
 
 def main() -> None:
@@ -39,6 +40,12 @@ def main() -> None:
     compare_parser.add_argument("benchmark")
     compare_parser.add_argument("--budget", type=int, default=8000)
 
+    replay_parser = subparsers.add_parser("replay", help="replay labelled tasks through the retriever")
+    replay_parser.add_argument("index")
+    replay_parser.add_argument("benchmark")
+    replay_parser.add_argument("--mode", choices=("bm25", "semantic", "hybrid"), default="hybrid")
+    replay_parser.add_argument("--budget", type=int, default=8000)
+
     args = parser.parse_args()
     if args.command == "index":
         index = build_index(args.root, include_history=args.history, history_limit=args.history_limit, github_repo=args.github_repo, github_token=args.github_token, github_limit=args.github_limit)
@@ -52,9 +59,12 @@ def main() -> None:
     elif args.command == "evaluate":
         cases = json.loads(Path(args.benchmark).read_text(encoding="utf-8"))
         print(json.dumps(evaluate(load_index(args.index), cases, mode=args.mode, budget=args.budget), indent=2))
-    else:
+    elif args.command == "compare":
         cases = json.loads(Path(args.benchmark).read_text(encoding="utf-8"))
         print(json.dumps(evaluate_all(load_index(args.index), cases, budget=args.budget), indent=2))
+    else:
+        cases = json.loads(Path(args.benchmark).read_text(encoding="utf-8"))
+        print(json.dumps(replay(load_index(args.index), cases, mode=args.mode, budget=args.budget), indent=2))
 
 
 if __name__ == "__main__":
