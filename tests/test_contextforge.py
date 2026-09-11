@@ -52,3 +52,9 @@ def test_index_metadata_tracks_external_evidence_counts():
     index = build_index(ROOT / "contextforge", include_history=False)
     assert index["history_documents"] == 0
     assert index["github_documents"] == 0
+
+
+def test_mcp_module_imports_without_optional_runtime():
+    from contextforge.mcp_server import create_server
+
+    assert callable(create_server)

@@ -9,3 +9,4 @@ tree-sitter-java>=0.23,<1
 tree-sitter-go>=0.23,<1
 tree-sitter-rust>=0.23,<1
 psycopg[binary]>=3.2,<4
+mcp>=2,<3

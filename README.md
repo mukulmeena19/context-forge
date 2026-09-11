@@ -38,6 +38,16 @@ Run the API after installing `requirements.txt`:
 uvicorn contextforge.api:app --reload --port 8001
 ```
 
+Run the optional MCP server for a coding-agent client:
+
+```text
+python -m contextforge.mcp_server
+```
+
+The server exposes one read-only tool, `retrieve_repository_context`, which
+returns the ranked results, evidence explanations, task intent, and Markdown
+context package. It never edits files or executes repository code.
+
 ## Benchmark format
 
 ```json
@@ -77,6 +87,7 @@ purpose coding assistant.
 - [x] Generated-index exclusion to prevent evaluation leakage
 - [x] Code-aware weighting for paths and symbols
 - [x] Max-dominant hybrid fusion to preserve strong retrieval signals
+- [x] Read-only MCP agent integration
 - [x] CLI and FastAPI interfaces
 - [x] Tree-sitter multi-language extraction with safe fallbacks
 - [x] Git history ingestion
