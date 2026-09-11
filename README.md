@@ -97,7 +97,7 @@ purpose coding assistant.
 - [x] GitHub issue/PR ingestion
 - [x] PostgreSQL/pgvector schema
 - [x] Optional PostgreSQL/pgvector adapter
-- [ ] Agent replay evaluation
+- [x] Agent replay evaluation with conservative context-coverage proxy
 
 ### Verification
 
