@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS repositories (
     default_branch TEXT,
     indexed_commit TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(local_path)
 );
 
 CREATE TABLE IF NOT EXISTS files (
