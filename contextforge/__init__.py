@@ -1,4 +1,4 @@
-"""Repository context retrieval for coding agents."""
+"""Context Forge repository context retrieval for coding agents."""
 
 from .indexer import build_index
 from .retrieval import retrieve_context

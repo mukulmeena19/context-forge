@@ -5,6 +5,8 @@ import json
 import re
 from pathlib import Path
 
+from .history import git_history_documents
+
 IGNORED_DIRS = {".git", ".venv", "venv", "node_modules", "dist", "build", "__pycache__", ".next"}
 SOURCE_EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".go", ".rs", ".rb", ".php", ".cs", ".cpp", ".c", ".h"}
 TEXT_EXTENSIONS = {".md", ".mdx", ".rst", ".txt", ".yaml", ".yml", ".json"}
@@ -62,7 +64,7 @@ def _imports(text: str) -> list[str]:
     return sorted(set(found))
 
 
-def build_index(root: str | Path) -> dict:
+def build_index(root: str | Path, include_history: bool = False, history_limit: int = 100) -> dict:
     root_path = Path(root).resolve()
     documents = []
     files = []
@@ -99,7 +101,9 @@ def build_index(root: str | Path) -> dict:
             target = file_lookup.get(candidate)
             if target and target != relative:
                 edges.append({"source": relative, "target": target, "kind": "tests"})
-    return {"version": 1, "root": str(root_path), "files": sorted(files), "documents": documents, "edges": edges}
+    history = git_history_documents(root_path, limit=history_limit) if include_history else []
+    documents.extend(history)
+    return {"version": 1, "root": str(root_path), "files": sorted(files), "documents": documents, "edges": edges, "history_documents": len(history)}
 
 
 def save_index(index: dict, output: str | Path) -> None:

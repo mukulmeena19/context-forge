@@ -1,5 +1,5 @@
 [project]
-name = "contextforge-retrieval-lab"
+name = "context-forge"
 version = "0.1.0"
 description = "Repository context retrieval and evaluation for coding agents"
 requires-python = ">=3.10"

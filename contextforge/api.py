@@ -15,6 +15,8 @@ from .retrieval import retrieve_context
 class IndexRequest(BaseModel):
     root: str
     output: str = ".contextforge/index.json"
+    include_history: bool = False
+    history_limit: int = Field(default=100, ge=1, le=500)
 
 
 class RetrieveRequest(BaseModel):
@@ -32,7 +34,7 @@ class EvaluateRequest(BaseModel):
     budget: int = Field(default=8000, ge=100, le=100000)
 
 
-app = FastAPI(title="ContextForge Retrieval Lab", version="0.1.0")
+app = FastAPI(title="Context Forge", version="0.1.0")
 
 
 @app.get("/health")
@@ -45,9 +47,9 @@ def index_repository(request: IndexRequest) -> dict:
     root = Path(request.root)
     if not root.is_dir():
         raise HTTPException(status_code=404, detail="Repository directory does not exist.")
-    index = build_index(root)
+    index = build_index(root, include_history=request.include_history, history_limit=request.history_limit)
     save_index(index, request.output)
-    return {"files": len(index["files"]), "chunks": len(index["documents"]), "edges": len(index["edges"]), "output": str(Path(request.output).resolve())}
+    return {"files": len(index["files"]), "chunks": len(index["documents"]), "edges": len(index["edges"]), "history_documents": index["history_documents"], "output": str(Path(request.output).resolve())}
 
 
 @app.post("/retrieve")

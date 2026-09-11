@@ -9,12 +9,14 @@ from .retrieval import retrieve_context
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="ContextForge repository retrieval lab")
+    parser = argparse.ArgumentParser(description="Context Forge repository retrieval lab")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     index_parser = subparsers.add_parser("index", help="index a repository")
     index_parser.add_argument("root")
     index_parser.add_argument("--output", default=".contextforge/index.json")
+    index_parser.add_argument("--history", action="store_true", help="include recent Git commit summaries")
+    index_parser.add_argument("--history-limit", type=int, default=100)
 
     retrieve_parser = subparsers.add_parser("retrieve", help="retrieve a context package")
     retrieve_parser.add_argument("index")
@@ -35,9 +37,9 @@ def main() -> None:
 
     args = parser.parse_args()
     if args.command == "index":
-        index = build_index(args.root)
+        index = build_index(args.root, include_history=args.history, history_limit=args.history_limit)
         save_index(index, args.output)
-        print(json.dumps({"files": len(index["files"]), "chunks": len(index["documents"]), "output": str(Path(args.output).resolve())}, indent=2))
+        print(json.dumps({"files": len(index["files"]), "chunks": len(index["documents"]), "edges": len(index["edges"]), "history_documents": index["history_documents"], "output": str(Path(args.output).resolve())}, indent=2))
     elif args.command == "retrieve":
         print(json.dumps(retrieve_context(args.query, load_index(args.index), mode=args.mode, budget=args.budget), indent=2))
     elif args.command == "evaluate":

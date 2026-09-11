@@ -1,6 +1,6 @@
-# ContextForge Retrieval Lab
+# Context Forge
 
-ContextForge is a local-first retrieval and evaluation system for coding agents.
+Context Forge is a local-first retrieval and evaluation system for coding agents.
 It turns a bug report or feature request into a small, ranked, evidence-backed
 context package instead of sending an entire repository to an LLM.
 
@@ -21,7 +21,7 @@ context package instead of sending an entire repository to an LLM.
 From this directory:
 
 ```text
-python -m contextforge.cli index ..\backend --output .contextforge\index.json
+python -m contextforge.cli index ..\backend --history --output .contextforge\index.json
 python -m contextforge.cli retrieve .contextforge\index.json "Fix duplicate notifications after profile update" --mode hybrid --budget 1800
 python -m contextforge.cli compare .contextforge\index.json benchmarks\demo.json
 ```
@@ -54,10 +54,9 @@ The first experiment compares lexical, semantic, and hybrid retrieval under the
 same corpus and token budget. Add real GitHub issues or SWE-bench examples to
 `benchmarks/`, then compare retrieval quality with downstream agent success.
 
-The project is intentionally named **ContextForge Retrieval Lab** because
-“ContextForge” is already used by unrelated developer tools. A final public
-release should choose a unique product name after checking trademarks and package
-registries.
+The repository is named `context-forge`. The product focuses on explainable
+repository context retrieval and evaluation rather than acting as a general
+purpose coding assistant.
 
 ## Build status
 
@@ -70,6 +69,7 @@ registries.
 - [x] Token-budgeted Markdown context package
 - [x] CLI and FastAPI interfaces
 - [ ] Tree-sitter multi-language extraction
-- [ ] Git history and issue/PR ingestion
+- [x] Git history ingestion
+- [ ] GitHub issue/PR ingestion
 - [ ] Persistent PostgreSQL/pgvector store
 - [ ] Agent replay evaluation
